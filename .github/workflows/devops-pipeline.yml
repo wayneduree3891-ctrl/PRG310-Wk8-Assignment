@@ -82,22 +82,22 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/my-app-3:latest
 
   deploy:
-    runs-on: ubuntu-latest
-    needs: docker_build
-    steps:
-      - name: Deploy to AWS EC2
-        env:
-          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          HOST: ${{ secrets.EC2_PUBLIC_IP }}
-          USER: ubuntu
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: |
-          printf "%s" "$PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
+  runs-on: ubuntu-latest
+  needs: docker_build
+  steps:
+    - name: Deploy to AWS EC2
+      env:
+        PRIVATE_KEY_B64: ${{ secrets.EC2_SSH_KEY_B64 }}
+        HOST: ${{ secrets.EC2_PUBLIC_IP }}
+        USER: ubuntu
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      run: |
+        echo "$PRIVATE_KEY_B64" | base64 -d > private_key.pem
+        chmod 600 private_key.pem
 
-          ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << EOF
-            docker pull $DOCKER_USERNAME/my-app-3:latest
-            docker stop my-app-3 || true
-            docker rm my-app-3 || true
-            docker run -d -p 5000:5000 --name my-app-3 $DOCKER_USERNAME/my-app-3:latest
-          EOF
+        ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << 'EOF'
+          docker pull $DOCKER_USERNAME/my-app-3:latest
+          docker stop my-app-3 || true
+          docker rm my-app-3 || true
+          docker run -d -p 5000:5000 --name my-app-3 $DOCKER_USERNAME/my-app-3:latest
+        EOF
