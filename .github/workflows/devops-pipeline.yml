@@ -92,7 +92,7 @@ jobs:
           USER: ubuntu
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          echo "$PRIVATE_KEY" > private_key.pem
+          printf "%s" "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
 
           ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST << EOF
